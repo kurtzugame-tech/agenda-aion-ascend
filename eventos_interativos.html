@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda de Eventos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e2e;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: #2e2e3e;
+            padding: 15px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .clock {
+            margin-top: 10px;
+            font-size: 1.2rem;
+            color: #00ffae;
+        }
+
+        table {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #2e2e3e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            background-color: #3a3a4a;
+            color: #00ffae;
+            position: sticky;
+            top: 0;
+        }
+
+        .highlight {
+            background-color: #00ffae;
+            color: #000;
+            font-weight: bold;
+        }
+
+        .highlight-day {
+            background-color: #00ffae;
+            color: #000;
+        }
+
+        .event {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+            display: inline-block;
+            margin: 2px;
+        }
+
+        /* Barra de progresso */
+        .progress-container {
+            margin-top: 6px;
+            height: 6px;
+            background-color: #444;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background-color: #00ffae;
+            width: 0%;
+            transition: width 1s linear;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Agenda de Eventos
+        <div class="clock" id="clock"></div>
+    </header>
+
+    <table id="agenda">
+        <thead>
+            <tr>
+                <th>Horário</th>
+                <th>Segunda</th>
+                <th>Terça</th>
+                <th>Quarta</th>
+                <th>Quinta</th>
+                <th>Sexta</th>
+                <th>Sábado</th>
+                <th>Domingo</th>
+            </tr>
+        </thead>
+        <tbody id="agenda-body"></tbody>
+    </table>
+
+    <script>
+        const eventos = {
+            "00:00": {
+                "Terça": "Tiak Research Center | Dredgion Interception",
+                "Quarta": "Hexad | Tiak Research Center",
+                "Quinta": "Dredgion Interception",
+                "Sexta": "Tiak Research Center | Governor Sunayaka",
+                "Sábado": "Governor Sunayaka",
+                "Domingo": "Hexad"
+            },
+            "01:00": {
+                "Segunda": "Black Vevium Battlefield",
+                "Quarta": "Black Vevium Battlefield",
+                "Sexta": "Black Vevium Battlefield"
+            },
+            "02:00": {
+                "Todos": "Chantra Dredgion"
+            },
+            "14:00": {
+                "Todos": "Harbinger of Fate ⏱️ (30m)"
+            },
+            "15:00": {
+                "Todos": "Chantra Dredgion"
+            },
+            "20:00": {
+                "Domingo": "Temple of Scales & Crimson Temple | Altar of Avarice & Vorgaltem Citadel"
+            },
+            "22:00": {
+                "Todos": "Incarnate Conquests ⏱️ (15m)"
+            },
+            "23:00": {
+                "Terça": "Temple of Scales & Crimson Temple",
+                "Quarta": "Alpheta Beluslan",
+                "Quinta": "Altar of Avarice & Vorgaltem Citadel",
+                "Sábado": "Alpheta Beluslan"
+            }
+        };
+
+        const cores = ["#ff6b6b", "#ffb347", "#ffd93d", "#6bcfff", "#6bff8a", "#d86bff", "#ff85d1"];
+
+        // Gera lista de horários
+        const horarios = [];
+        for (let i = 14; i < 24; i++) horarios.push((i < 10 ? "0" : "") + i + ":00");
+        for (let i = 0; i < 14; i++) horarios.push((i < 10 ? "0" : "") + i + ":00");
+
+        const dias = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+        const tbody = document.getElementById("agenda-body");
+
+        // Geração da tabela com cores para eventos
+        horarios.forEach(horario => {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.textContent = horario;
+            tr.appendChild(th);
+
+            dias.forEach(dia => {
+                const td = document.createElement("td");
+                const eventosDia = eventos[horario]?.[dia] || eventos[horario]?.["Todos"] || "";
+                if (eventosDia) {
+                    const listaEventos = eventosDia.split("|").map(e => e.trim());
+                    listaEventos.forEach((ev, idx) => {
+                        const span = document.createElement("span");
+                        span.textContent = ev;
+                        span.classList.add("event");
+                        span.style.backgroundColor = cores[(ev.length + idx) % cores.length];
+                        td.appendChild(span);
+                        if (idx < listaEventos.length - 1) td.append(" | ");
+                    });
+                }
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+
+        // Relógio + destaque de hora e dia atuais
+        function atualizarRelogio() {
+            const agora = new Date();
+            document.getElementById("clock").textContent = agora.toLocaleTimeString("pt-BR");
+
+            const horaAtual = agora.getHours();
+            const diaAtual = dias[agora.getDay() === 0 ? 6 : agora.getDay() - 1];
+
+            // Destaca linha do horário atual
+            document.querySelectorAll("tbody tr").forEach(tr => tr.classList.remove("highlight"));
+            const linhaIndex = horarios.indexOf((horaAtual < 10 ? "0" : "") + horaAtual + ":00");
+            if (linhaIndex !== -1) document.querySelectorAll("tbody tr")[linhaIndex].classList.add("highlight");
+
+            // Destaca o dia atual
+            document.querySelectorAll("thead th").forEach(th => th.classList.remove("highlight-day"));
+            const diaIndex = dias.indexOf(diaAtual);
+            if (diaIndex !== -1) document.querySelectorAll("thead th")[diaIndex + 1].classList.add("highlight-day");
+
+            // Atualiza barra de progresso
+            document.querySelectorAll(".progress-container").forEach(el => el.remove());
+            if (linhaIndex !== -1) {
+                const linha = document.querySelectorAll("tbody tr")[linhaIndex];
+                const progressContainer = document.createElement("div");
+                progressContainer.classList.add("progress-container");
+                const progressBar = document.createElement("div");
+                progressBar.classList.add("progress-bar");
+
+                // Descobre duração do evento
+                const eventoAtual = linha.querySelector("td:nth-child(" + (diaIndex + 2) + ")").textContent;
+                const duracao = eventoAtual.includes("15m") ? 15 : eventoAtual.includes("30m") ? 30 : 60;
+                const minutos = agora.getMinutes();
+                const progresso = (minutos / duracao) * 100;
+
+                progressBar.style.width = `${Math.min(progresso, 100)}%`;
+                progressContainer.appendChild(progressBar);
+                linha.appendChild(progressContainer);
+            }
+        }
+
+        atualizarRelogio();
+        setInterval(atualizarRelogio, 1000);
+    </script>
+</body>
+</html>
