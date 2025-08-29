@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda de Eventos</title>
+<style>
+:root{
+    --bg:#0f1221; --panel:#171a2b; --panel-2:#1f2340; --accent:#00ffae; --text:#e7e7ee; --muted:#9aa0b4;
+    --row-highlight: rgba(0,255,174,.18); --day-highlight: rgba(0,255,174,.22);
+}
+body{margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center;}
+header{position:sticky; top:0; z-index:50; backdrop-filter: blur(6px); background:linear-gradient(0deg,transparent, rgba(0,0,0,.25) 60%); padding:18px 16px; text-align:center; border-bottom:1px solid rgba(255,255,255,.06)}
+h1{margin:0; font-size:clamp(18px,3vw,26px)}
+.clock{margin-top:6px; font-size:14px; color:var(--accent)}
+.table-container{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+table{min-width:1200px; width:100%; max-width:1400px; border-collapse:separate; border-spacing:0; table-layout:fixed; background:linear-gradient(180deg,var(--panel),var(--panel-2)); border-radius:16px; overflow:hidden;}
+thead th{position:sticky; top:0; background:rgba(255,255,255,.04); color:var(--accent); font-weight:700; z-index:3}
+th, td{padding:8px; text-align:center; border-bottom:1px solid rgba(255,255,255,.06); word-wrap:break-word; font-size:0.9rem}
+thead th:first-child, tbody th:first-child{position:sticky; left:0; background:rgba(255,255,255,.03); z-index:4}
+tr.row-highlight{background:var(--row-highlight)}
+.day-highlight{background:var(--day-highlight); color:#00140c}
+.cell{min-width:160px}
+.chips{display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap}
+.chip{display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:999px; font-weight:700; color:#08151b; background:#6bcfff; box-shadow: inset 0 -1px 0 rgba(0,0,0,.25),0 4px 12px rgba(0,0,0,.2); border:1px solid rgba(0,0,0,.3); font-size:0.8rem}
+.chip .sep{opacity:.55; font-weight:700}
+.progress{height:6px; width:100%; background:rgba(255,255,255,.08); border-radius:6px; overflow:hidden; margin-top:4px}
+.progress>.bar{height:100%; width:0%; background:linear-gradient(90deg,var(--accent), #7afcd8); transition:width .8s linear}
+.legend{display:flex; gap:10px; flex-wrap:wrap; padding:12px; border-top:1px dashed rgba(255,255,255,.1); color:var(--muted); font-size:12px}
+.legend-item{display:flex; align-items:center; gap:8px}
+.legend-swatch{width:14px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.3)}
+@media(max-width:900px){th, td{padding:6px; font-size:0.8rem}.chip{font-size:0.7rem; padding:2px 6px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Agenda de Eventos</h1>
+<div class="clock" id="clock"></div>
+</header>
+<div class="table-container">
+<table id="agenda">
+<thead>
+<tr>
+<th>Horário</th>
+<th>Segunda</th>
+<th>Terça</th>
+<th>Quarta</th>
+<th>Quinta</th>
+<th>Sexta</th>
+<th>Sábado</th>
+<th>Domingo</th>
+</tr>
+</thead>
+<tbody id="agenda-body"></tbody>
+</table>
+</div>
+<div class="legend" id="legend"></div>
+<script>
+const DIAS=["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+const HORAS=[]; for(let i=14;i<24;i++) HORAS.push((i<10?"0":"")+i+":00"); for(let i=0;i<14;i++) HORAS.push((i<10?"0":"")+i+":00");
+const COLORS={"Chantra Dredgion":"#5dd6ff","Harbinger of Fate":"#7cff9b","Tiak Research Center":"#b48bff","Black Vevium Battlefield":"#ffd166","Incarnate Conquests":"#ff85d1","Temple of Scales & Crimson Temple":"#5eead4","Altar of Avarice & Vorgaltem Citadel":"#fca5a5","Alpheta Beluslan":"#a78bfa","Governor Sunayaka":"#e9f871","Hexad":"#fb7185","Dredgion Interception":"#7dd3fc"};
+const EVENT_LIST=[
+{ name:"Chantra Dredgion", days:"Todos", start:"02:00", duration:120 },
+{ name:"Chantra Dredgion", days:"Todos", start:"15:00", duration:120 },
+{ name:"Harbinger of Fate", days:"Todos", start:"00:00", duration:60 },
+{ name:"Harbinger of Fate", days:"Todos", start:"14:00", duration:30 },
+{ name:"Tiak Research Center", days:["Terça","Quarta","Sexta"], start:"00:00", duration:120 },
+{ name:"Black Vevium Battlefield", days:["Segunda","Quarta","Sexta"], start:"01:00", duration:120 },
+{ name:"Incarnate Conquests", days:"Todos", start:"22:00", duration:15 },
+{ name:"Temple of Scales & Crimson Temple", days:["Terça"], start:"23:00", duration:60 },
+{ name:"Temple of Scales & Crimson Temple", days:["Domingo"], start:"20:00", duration:60 },
+{ name:"Altar of Avarice & Vorgaltem Citadel", days:["Quinta"], start:"23:00", duration:60 },
+{ name:"Altar of Avarice & Vorgaltem Citadel", days:["Domingo"], start:"20:00", duration:60 },
+{ name:"Alpheta Beluslan", days:["Quarta","Sábado"], start:"23:00", duration:60 },
+{ name:"Governor Sunayaka", days:["Sexta","Sábado"], start:"00:00", duration:60 },
+{ name:"Hexad", days:["Quarta","Domingo"], start:"00:00", duration:60 },
+{ name:"Dredgion Interception", days:["Terça","Quinta"], start:"00:00", duration:60 }
+];
+function pad2(n){return String(n).padStart(2,'0');}
+function toMinutes(hhmm){const [H,M]=hhmm.split(':').map(Number);return H*60+M;}
+function fromMinutes(m){return pad2(Math.floor((m%1440)/60))+":"+pad2(m%60);}
+function buildMatrix(){
+const matrix={};HORAS.forEach(h=>matrix[h]={});
+const allDays=DIAS;
+EVENT_LIST.forEach(ev=>{
+const days=ev.days==="Todos"?allDays:ev.days;
+const startMin=toMinutes(ev.start);
+const endMin=(startMin+ev.duration)%1440;
+days.forEach(dia=>{
+let t=startMin;
+do{
+const slot=fromMinutes(t-(t%60));
+if(!matrix[slot][dia]) matrix[slot][dia]=[];
+matrix[slot][dia].push({name:ev.name,start:ev.start,duration:ev.duration,end:fromMinutes(startMin+ev.duration),isShort:ev.duration<60});
+t=(Math.floor(t/60)+1)*60; t%=1440;
+}while(startMin<endMin?(t<endMin&&t>startMin):(t<endMin||t>startMin));
+});
+});
+return matrix;
+}
+const matrix=buildMatrix();
+const tbody=document.getElementById('agenda-body');
+HORAS.forEach(h=>{
+const tr=document.createElement('tr');
+const th=document.createElement('th'); th.textContent=h; tr.appendChild(th);
+DIAS.forEach(dia=>{
+const td=document.createElement('td');td.className='cell';
+const wrap=document.createElement('div');wrap.className='chips';
+const list=matrix[h][dia]||[];
+list.forEach((item,idx)=>{
+const chip=document.createElement('span');chip.className='chip';
+chip.style.background=COLORS[item.name]||'#6bcfff';
+chip.textContent=item.name+(item.isShort?` (⏱️ ${item.duration}m)`:'');
+wrap.appendChild(chip);
+if(idx<list.length-1){const sep=document.createElement('span');sep.className='sep';sep.textContent='|';wrap.appendChild(sep);}
+});
+td.appendChild(wrap);
+tr.appendChild(td);
+});
+tbody.appendChild(tr);
+});
+const legend=document.getElementById('legend');
+Object.entries(COLORS).forEach(([name,color])=>{
+const li=document.createElement('div');li.className='legend-item';
+li.innerHTML=`<span class="legend-swatch" style="background:${color}"></span> ${name}`;
+legend.appendChild(li);
+});
+function updateNow(){
+const now=new Date();
+document.getElementById('clock').textContent=now.toLocaleTimeString('pt-BR');
+const hr=now.getHours();
+const currentSlot=pad2(hr)+":00";
+const rowIndex=HORAS.indexOf(currentSlot);
+document.querySelectorAll('#agenda tbody tr').forEach(tr=>tr.classList.remove('row-highlight'));
+if(rowIndex>=0){document.querySelectorAll('#agenda tbody tr')[rowIndex].classList.add('row-highlight');}
+const dowIdx=(now.getDay()+6)%7;
+document.querySelectorAll('thead th').forEach((th,idx)=>th.classList.toggle('day-highlight',idx-1===dowIdx));
+document.querySelectorAll('.progress').forEach(p=>p.remove());
+if(rowIndex>=0){
+const row=document.querySelectorAll('#agenda tbody tr')[rowIndex];
+const cell=row.children[dowIdx+1];
+const textCombined=(cell.textContent||'').toLowerCase();
+if(textCombined.trim()){
+const items=(matrix[currentSlot][DIAS[dowIdx]]||[]);
+let dur=60;
+if(items.length){dur=Math.max(...items.map(i=>i.duration));}
+const mins=now.getMinutes();
+const pct=Math.min(100,(mins/dur)*100);
+const bar=document.createElement('div');bar.className='progress';
+const inner=document.createElement('div');inner.className='bar';inner.style.width=pct+"%";
+bar.appendChild(inner);cell.appendChild(bar);
+}
+}
+}
+updateNow();
+setInterval(updateNow,1000);
+</script>
+</body>
+</html>
