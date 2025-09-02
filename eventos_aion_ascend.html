@@ -1,0 +1,170 @@
+import { type Event, type ScheduleData } from "@shared/schema";
+
+export interface IStorage {
+  getScheduleData(): Promise<ScheduleData>;
+}
+
+export class MemStorage implements IStorage {
+  private scheduleData: ScheduleData;
+
+  constructor() {
+    this.scheduleData = {
+      events: [
+        // Battlegrounds ⚔️
+        {
+          id: "chantra-dredgion-1",
+          name: "Chantra Dredgion",
+          emoji: "⚔️",
+          type: "battlegrounds",
+          startTime: "15:00",
+          endTime: "17:00",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        },
+        {
+          id: "chantra-dredgion-2",
+          name: "Chantra Dredgion",
+          emoji: "⚔️",
+          type: "battlegrounds",
+          startTime: "02:00",
+          endTime: "04:00",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        },
+        {
+          id: "tiak-research",
+          name: "Tiak Research Center",
+          emoji: "⚔️",
+          type: "battlegrounds",
+          startTime: "00:00",
+          endTime: "02:00",
+          days: ["tuesday", "wednesday", "friday"],
+        },
+        {
+          id: "black-vevium",
+          name: "Black Vevium Battlefield",
+          emoji: "⚔️",
+          type: "battlegrounds",
+          startTime: "01:00",
+          endTime: "03:00",
+          days: ["monday", "wednesday", "friday"],
+        },
+        {
+          id: "harbinger-1",
+          name: "Harbinger of Fate",
+          emoji: "⚔️",
+          type: "battlegrounds",
+          startTime: "14:00",
+          endTime: "14:30",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        },
+        {
+          id: "harbinger-2",
+          name: "Harbinger of Fate",
+          emoji: "⚔️",
+          type: "battlegrounds",
+          startTime: "00:00",
+          endTime: "01:00",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        },
+        // Short Events ⏲️
+        {
+          id: "incarnate-conquests",
+          name: "Incarnate Conquests",
+          emoji: "⏲️",
+          type: "shortevents",
+          startTime: "22:00",
+          endTime: "22:15",
+          days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        },
+        // Sieges 🏰
+        {
+          id: "temple-scales-tue",
+          name: "Temple of Scales & Crimson Temple",
+          emoji: "🏰",
+          type: "sieges",
+          startTime: "23:00",
+          endTime: "00:00",
+          days: ["tuesday"],
+        },
+        {
+          id: "temple-scales-sun",
+          name: "Temple of Scales & Crimson Temple",
+          emoji: "🏰",
+          type: "sieges",
+          startTime: "20:00",
+          endTime: "21:00",
+          days: ["sunday"],
+        },
+        {
+          id: "altar-avarice-thu",
+          name: "Altar of Avarice & Vorgaltem Citadel",
+          emoji: "🏰",
+          type: "sieges",
+          startTime: "23:00",
+          endTime: "00:00",
+          days: ["thursday"],
+        },
+        {
+          id: "altar-avarice-sun",
+          name: "Altar of Avarice & Vorgaltem Citadel",
+          emoji: "🏰",
+          type: "sieges",
+          startTime: "20:00",
+          endTime: "21:00",
+          days: ["sunday"],
+        },
+        {
+          id: "alpheta-wed",
+          name: "Alpheta Beluslan",
+          emoji: "🏰",
+          type: "sieges",
+          startTime: "23:00",
+          endTime: "00:00",
+          days: ["wednesday"],
+        },
+        {
+          id: "alpheta-sat",
+          name: "Alpheta Beluslan",
+          emoji: "🏰",
+          type: "sieges",
+          startTime: "23:00",
+          endTime: "00:00",
+          days: ["saturday"],
+        },
+        // Raids 🗡️
+        {
+          id: "governor-sunayaka",
+          name: "Governor Sunayaka",
+          emoji: "🗡️",
+          type: "raids",
+          startTime: "00:00",
+          endTime: "01:00",
+          days: ["friday", "saturday"],
+        },
+        {
+          id: "hexad",
+          name: "Hexad",
+          emoji: "🗡️",
+          type: "raids",
+          startTime: "00:00",
+          endTime: "01:00",
+          days: ["wednesday", "sunday"],
+        },
+        {
+          id: "dredgion-interception",
+          name: "Dredgion Interception",
+          emoji: "🗡️",
+          type: "raids",
+          startTime: "00:00",
+          endTime: "01:00",
+          days: ["tuesday", "thursday"],
+        },
+      ],
+    };
+  }
+
+  async getScheduleData(): Promise<ScheduleData> {
+    return this.scheduleData;
+  }
+}
+
+export const storage = new MemStorage();
